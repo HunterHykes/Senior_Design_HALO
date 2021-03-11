@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2021-02-16T07:14:07Z",
+        "GenerationSoftware": {
+            "Application": "EAGLE",
+            "Vendor": "Autodesk",
+            "Version": "9.6.2"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.671119,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "2021-01-21_HALO_RGB_Board-Autorouted"
+        },
+        "Owner": "Hunter Hykes <hh81@zips.uakron.edu>",
+        "Size": {
+            "X": 15.164,
+            "Y": 17.389
+        }
+    }
+}
