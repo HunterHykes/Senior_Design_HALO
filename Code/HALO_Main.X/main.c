@@ -73,86 +73,18 @@ typedef struct {
 
 // store (mux, port) pairs in an array
 muxPort_t ToF[NUM_TOF] = {
-    {0x00, 0x00},
-    {0x00, 0x01},
-    {0x00, 0x02},
-    {0x01, 0x00},
-    {0x01, 0x01},
-    {0x01, 0x02}
+    {0x00, 0x00},   // Left Center  --> MID LED
+    {0x00, 0x01},   // Left         --> LEFT LED
+    {0x00, 0x02},   // Left Left    --> LEFT LED
+    {0x01, 0x00},   // Right Center --> MID LED
+    {0x01, 0x01},   // Right        --> RIGHT LED
+    {0x01, 0x02}    // Right Right  --> RIGHT LED
 };
 
-/* * * * * * * * * * * Accelerometer Definitions * * * * * * * * * * */
-#define H3LIS200DL_I2CADDR 0x18
-#define H3LIS200DL_WHO_AM_I 0x0F
-#define H3LIS200DL_CTRL_REG1 0x20
-#define H3LIS200DL_CTRL_REG2 0x21
-#define H3LIS200DL_CTRL_REG3 0x22
-#define H3LIS200DL_CTRL_REG4 0x23
-#define H3LIS200DL_CTRL_REG5 0x24
-#define H3LIS200DL_HP_FILTER_RESET 0x25
-#define H3LIS200DL_REFERENCE 0x26
-#define H3LIS200DL_STATUS_REG 0x27
-#define H3LIS200DL_OUT_X 0x29               // X Data
-#define H3LIS200DL_OUT_Y 0x2B               // Y Data
-#define H3LIS200DL_OUT_Z 0x2D               // Z Data
-#define H3LIS200DL_INT1_CFG 0x30            // Interrupt 1 (Pin 11, used)
-#define H3LIS200DL_INT1_SRC 0x31
-#define H3LIS200DL_INT1_THS 0x32
-#define H3LIS200DL_INT1_DURATION 0x33
-#define H3LIS200DL_INT2_CFG 0x34            // Interrupt 2
-#define H3LIS200DL_INT2_SRC 0x35
-#define H3LIS200DL_INT2_THS 0x36
-#define H3LIS200DL_INT2_DURATION 0x37
-                                // POWER MODES
-#define H3LIS200DL_PWR_DWN 0x00     // Power Down Mode
-#define H3LIS200DL_NRML 0x01        // Normal Mode
-#define H3LIS200DL_LP_0_5HZ 0x02    // Low Power 0.5Hz
-#define H3LIS200DL_LP_1HZ 0x03      // Low Power 1.0Hz
-#define H3LIS200DL_LP_2HZ 0x04      // Low Power 2.0Hz
-#define H3LIS200DL_LP_5HZ 0x05      // Low Power 5.0Hz
-#define H3LIS200DL_LP_10HZ 0x06     // Low Power 10.Hz
-                                // OUTPUT DATA RATES
-#define H3LIS200DL_DR_50HZ 0x00     // 50Hz
-#define H3LIS200DL_DR_100HZ 0x01    // 100Hz
-#define H3LIS200DL_DR_400HZ 0x02    // 400Hz
-#define H3LIS200DL_DR_1000HZ 0x03   // 1000Hz
-
-#define H3LIS200DL_EN_X 0x01    // Enable X Data
-#define H3LIS200DL_EN_Y 0x02    // Enable Y Data
-#define H3LIS200DL_EN_Z 0x04    // Enable Z Data
-#define H3LIS200DL_EN_XYZ 0x07  // Enable X, Y, and Z Data
-
-// ADXL345 Accelerometer
-#define ADXL345_I2C_ADDR 0x53 // 0x53   0xE5
-#define ADXL345_OFSX 0x1E
-#define ADXL345_OFSY 0x1F
-#define ADXL345_OFSZ 0x20
-#define ADXL345_DUR 0x21
-#define ADXL345_LATENT 0x22
-#define ADXL345_WINDOW 0x23
-#define ADXL345_THRESH_ACT 0x24
-#define ADXL345_THRESH_INACT 0x25
-#define ADXL345_TIME_INACT 0x26
-#define ADXL345_ACT_INACT_CTL 0x27
-#define ADXL345_THRESH_FF 0x28
-#define ADXL345_TIME_FF 0x29
-#define ADXL345_ACT_AXES 0x2A
-#define ADXL345_ACT_TAP_STATUS 0x2B
-#define ADXL345_BW_RATE 0x2C
-#define ADXL345_POWER_CTL 0x2D
-#define ADXL345_INT_ENABLE 0x2E
-#define ADXL345_INT_MAP 0x2F
-#define ADXL345_INT_SOURCE 0x30
-#define ADXL345_DATA_FORMAT 0x31
-#define ADXL345_DATA_X0 0x32
-#define ADXL345_DATA_X1 0x33
-#define ADXL345_DATA_Y0 0x34
-#define ADXL345_DATA_Y1 0x35
-#define ADXL345_DATA_Z0 0x36
-#define ADXL345_DATA_Z1 0x37
-#define ADXL345_FIFO_CTL 0x38
-#define ADXL345_FIFO_STATUS 0x39
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// LEFT LED == 0, MID LED == 1, RIGHT LED == 2
+int LEDs[NUM_TOF] = {
+    1, 0, 0, 1, 2, 2
+};
 
 /* * * * * * * * * * * RGB LED Color Definitions * * * * * * * * * * */
 // These are utilizing the same I/O pins as the on-board LEDs
@@ -160,24 +92,29 @@ muxPort_t ToF[NUM_TOF] = {
  * (0x01) LED1 <==> L/R RED
  * (0x02) LED2 <==> L/R GRN
  * (0x04) LED3 <==> L/R BLU
- * (0x08) LED4 <==> L ENABLE (ENABLEs are active LOW)
- * (0x10) LED5 <==> R ENABLE
+ * (0x08) LED4 <==> R ENABLE (ENABLEs are active LOW)
+ * (0x10) LED5 <==> L ENABLE
  * (0x20) LED6 <==> MID RED
  * (0x40) LED7 <==> MID GRN
  * (0x80) LED8 <==> MID BLU (MID LED has no ENABLE, is tied to GND)
 */
-#define LR_BLU  0x01
+#define LR_RED  0x01
 #define LR_GRN  0x02
-#define LR_RED  0x04
-#define LR_YLW  0x06
-#define L_ON    0x00
-#define L_OFF   0x08
+#define LR_BLU  0x04
+#define LR_YLW  0x03
+#define LR_PRP  0x05
+#define LR_ON   0x00 // both L and R on
 #define R_ON    0x00
 #define R_OFF   0x10
-#define MID_BLU 0x20
+#define L_ON    0x00
+#define L_OFF   0x08
+#define MID_RED 0x20
 #define MID_GRN 0x40
-#define MID_RED 0x80
-#define MID_YLW 0xB0
+#define MID_BLU 0x80
+#define MID_YLW 0x60
+#define MID_PRP 0xA0
+
+typedef enum { LED_L, LED_C, LED_R } LED_posn;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * ToF Sensor Definitions * * * * * * * * * * */
@@ -310,8 +247,6 @@ uint8_t stop_variable; // read by init and used when starting measurement; is St
 uint32_t measurement_timing_budget_us;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
-
 /* * * * * * * * * * * * I2C Bus Read/Write Functions * * * * * * * * * * * */
 I2C1_MESSAGE_STATUS I2C_Status = I2C1_MESSAGE_COMPLETE; // I2C Bus Status
 
@@ -328,9 +263,14 @@ uint16_t readRegister_16b(uint8_t dev, uint8_t reg);
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * ToF Helper Functions * * * * * * * * * * * * * */
+void initSingleToF(int ToF_num, uint16_t *dists);
 void initAllToF(uint16_t *dists);
+void initAllToF2(uint16_t *dists);
+void getSingleToF(int ToF_num, uint16_t *dists);
 void getAllToF(uint16_t *dists);
+void getAllToF2(uint16_t *dists);
 uint8_t getNearestObstacleIndex(uint16_t *dists);
+uint8_t getNearestObstacleIndex2(uint16_t *dists);
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * Time-of-Flight Sensor Functions * * * * * * * * * * */
@@ -360,28 +300,29 @@ bool VL53L0X_timeoutOccurred(void);
 /* * * * * * * * * * * * * * LED Display Functions * * * * * * * * * * * * * */
 void showBinary(uint8_t n);
 void showStartup(void);
+void showStartupRGB(void);
+void showDistanceRGB(uint16_t dist, LED_posn LED);
 void showCount(void);
 void showError(void);
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bool auto_int_clr = true;
+bool auto_int_clr = false;
 
 /*
                          Main application
  */
 int main(void) {
-    // ToF Variables
+    /* * * * * * * * * * * * * * * ToF * * * * * * * * * * * * * * */
     address = VL53L0X_I2CADDR;
     io_timeout = 0;
     did_timeout = false;
     // distances from each ToF sensor
-    int ToF_to_test = 0;
-    uint8_t dist_8;
-    uint16_t distance;
+    int ToF_to_test = 2; // 0, 1, 2, 3, 4, 5
+    uint8_t dist_8; // 8-bit integer used to display the 8 LSBs of distance
     uint16_t distances[NUM_TOF] = { 0xFFFF, 0xFFFF, 0xFFFF,
                                     0xFFFF, 0xFFFF, 0xFFFF};
     
-    // SD information variables
+    /* * * * * * * * * * * * * * microSD * * * * * * * * * * * * * */
     uint8_t SD_status;
     uint8_t FW_status;
     
@@ -390,194 +331,68 @@ int main(void) {
     Start_Initialization(); // for pins/LEDs
     I2C1_MESSAGE_STATUS I2C_Status = I2C1_MESSAGE_COMPLETE;
     
-    showStartup();          // run LED startup pattern
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+    //showStartup();    // run on-board LED startup pattern
+    showStartupRGB();   // run RGB LED startup pattern
     
     /* * * * * * * * * * * * * * SD Task * * * * * * * * * * * * * */
-    FATFS drive;        // Work area (filesystem object) for logical drive
-    FIL file;           // File to write
-    UINT actualLength;  // Actual length of
+//    FATFS drive;        // Work area (filesystem object) for logical drive
+//    FIL file;           // File to write
+//    UINT actualLength;  // Actual length of
 //    char data[] = "Hello, World!\r\n";
 //    char data2[] = "Eat Pant.\r\n";
-    char filename[] = "PANT.CSV";
-    char data[] = "1, 2, 3\r\n";
-    char data2[] = "X, Y, Z\r\n";
-    char data3[] = "P, A, N, T\r\n";
-    msTimerDelay(5);
-    if( SD_SPI_IsMediaPresent() == false) {
-        return;
-    }
-    SD_status = f_mount(&drive,"0:", 1);
-    if (SD_status == FR_OK) {   //mount
-        if (f_open(&file, filename, FA_WRITE | FA_CREATE_NEW ) == FR_OK) { //Open or Create TEST.TXT file
-            FW_status = f_write(&file, data, sizeof(data)-1, &actualLength );    //write the first line
-            FW_status = f_write(&file, data2, sizeof(data2)-1, &actualLength );  //write the second line
-            FW_status = f_write(&file, data3, sizeof(data3)-1, &actualLength );  //write the third line
-            f_close(&file);
-        }
-        f_mount(0,"0:",0);  //unmount disk
-        msTimerDelay(5);
-    }
-    showBinary(SD_status);
-    msTimerDelay(2000);
-//    showBinary(FW_status);
-//    msTimerDelay(2000);
-//    if(!FatFsDemo_Tasks()) {
-//        
-//        startupShow();
-//    } else {
-//        showBinary(0xF0);
+//    char filename[] = "PANT.CSV";
+//    char data[] = "1, 2, 3\r\n";
+//    char data2[] = "X, Y, Z\r\n";
+//    char data3[] = "P, A, N, T\r\n";
+//    msTimerDelay(5);
+//    if( SD_SPI_IsMediaPresent() == false) {
+//        return;
 //    }
-//    msTimerDelay(100);
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+//    SD_status = f_mount(&drive,"0:", 1);
+//    if (SD_status == FR_OK) {   //mount
+//        if (f_open(&file, filename, FA_WRITE | FA_CREATE_NEW ) == FR_OK) { //Open or Create TEST.TXT file
+//            FW_status = f_write(&file, data, sizeof(data)-1, &actualLength );    //write the first line
+//            FW_status = f_write(&file, data2, sizeof(data2)-1, &actualLength );  //write the second line
+//            FW_status = f_write(&file, data3, sizeof(data3)-1, &actualLength );  //write the third line
+//            f_close(&file);
+//        }
+//        f_mount(0,"0:",0);  //unmount disk
+//        msTimerDelay(5);
+//    }
+//    showBinary(SD_status);
+//    msTimerDelay(2000);
     
     /* * * * * * * * * * * * * * ToF Setup * * * * * * * * * * * * * */
-//    initAllToF(distances);
-    /*
-    selectPort(ToF[3]); // Select Multiplexer 1, Port 0
-    msTimerDelay(5);
-    VL53L0X_init();
-    distances[3] = VL53L0X_readRangeSingleMillimeters();
-    if(!auto_int_clr) {
-        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
-    }
-    VL53L0X_stopContinuous();
-    msTimerDelay(5);
+//    initSingleToF(ToF_to_test, distances);
+    initAllToF(distances);
     
-    
-    selectPort(ToF[4]); // Select Multiplexer 1, Port 0
-    msTimerDelay(5);
-    VL53L0X_init();
-    distances[4] = VL53L0X_readRangeSingleMillimeters();
-    if(!auto_int_clr) {
-        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
-    }
-    VL53L0X_stopContinuous();
-    msTimerDelay(5);
-    
-    
-    selectPort(ToF[5]); // Select Multiplexer 1, Port 0
-    msTimerDelay(5);
-    VL53L0X_init();
-    distances[5] = VL53L0X_readRangeSingleMillimeters();
-    if(!auto_int_clr) {
-        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
-    }
-    VL53L0X_stopContinuous();
-    msTimerDelay(5);
-    */
-//    selectPort(ToF[2]); // Select Multiplexer 1, Port 2
-//    VL53L0X_init();
-
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-    
-    /* * * * * * * * * * * * Accelerometer Setup * * * * * * * * * * * */
-//    selectPort(0x1, 0x2);
-//    writeRegister(ADXL345_I2C_ADDR, ADXL345_BW_RATE, 0x80); // 50Hz data rate
-//    writeRegister(ADXL345_I2C_ADDR, ADXL345_DATA_FORMAT, 0x2B); // 0b00101011
-//    // SELF-TEST diabled, INT_INVERT = 1 thus active low INTs, FULL_RES enabled
-//    // right-justified, +/1 16g range
-//    writeRegister(ADXL345_I2C_ADDR, ADXL345_POWER_CTL, 0x2B); // 0b00001000
-//    // Measure Mode Enabled, Sleep Mode Disabled
-//    showBinary(I2C_Status << 1);
-//    msTimerDelay(3000);
-    
-    //writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1, 0b00100111);
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-    
-    uint8_t intNum = 0;
-    uint8_t index;
-    
-    uint8_t interrupt_status = 0x00;
+    uint8_t index; // to hold index of the nearest object
     
     while (1) {
         /*************** I2C Time-of-Flight **************/
-        // GET ALL VALUES
-//        getAllToF(distances);   // get the distances from all ToF sensors
-        /************** READ SINGLE VALUE **************/
-        /*
-        selectPort(ToF[3]); // Select Multiplexer 0, Port 0
-        msTimerDelay(1);
-        VL53L0X_startContinuous(0);
-        distances[3] = VL53L0X_readRangeSingleMillimeters();
-        msTimerDelay(1);
-        VL53L0X_stopContinuous();
-        interrupt_status = readReg(0x71, 0x00);
-        showBinary(interrupt_status);
-        msTimerDelay(50);
+        getAllToF(distances);      // get the distances from all ToF sensors
         
-        selectPort(ToF[4]); // Select Multiplexer 0, Port 1
-        msTimerDelay(1);
-        VL53L0X_startContinuous(0);
-        distances[4] = VL53L0X_readRangeSingleMillimeters();
-        msTimerDelay(1);
-        VL53L0X_stopContinuous();        
-        interrupt_status = readReg(0x71, 0x00);
-        showBinary(interrupt_status);
-        msTimerDelay(50);
+        // get the distance from the ToF_to_test sensor
+//        getSingleToF(ToF_to_test, distances);
 
-        selectPort(ToF[5]); // Select Multiplexer 0, Port 2
-        msTimerDelay(1);
-        VL53L0X_startContinuous(0);
-        distances[5] = VL53L0X_readRangeSingleMillimeters();
-        msTimerDelay(1);
-        VL53L0X_stopContinuous();
-        msTimerDelay(50);       
-        interrupt_status = readReg(0x71, 0x00);
-        showBinary(interrupt_status);
-        msTimerDelay(50);
-        */
-        /************** READ CONTINUOUS **************/
-        //distance = VL53L0X_readRangeContinuousMillimeters();
-        
         /************** SHOW READING **************/
 //        dist_8 = distances[ToF_to_test] & 0xFF;
-//        //dist_8 = distance & 0xFF;
-//        
-//        showBinary(dist_8);
-//        //msTimerDelay(10);
+        // show reading LSBs via on-board LEDs
+//        showBinary(dist_8); 
+//        msTimerDelay(10);
+        // show RGB corresponding to reading of ToF_to_test
+//        showDistanceRGB(distances[ToF_to_test], ToF_to_test/2);
+        
+        // find the sensor detecting the closest obstacle
+        index = getNearestObstacleIndex(distances);
+        // show RGB corresponding to reading of said sensor
+        if(index == 0xFF) {
+            showBinary(0x00);
+        }
+        else {
+            showDistanceRGB(distances[index], LEDs[index]);
+        }
 
-//        index = getNearestObstacleIndex(distances);
-//        if(index == 0xFF) {
-//            showBinary(0x00);
-//        }
-//        else {
-//            showBinary(index + 1);
-//        }
-
-        showBinary(LR_GRN | R_OFF);
-        msTimerDelay(500);
-        showBinary(LR_YLW | R_OFF);
-        msTimerDelay(500);
-        showBinary(LR_RED | R_OFF);
-        msTimerDelay(500);
-        /*************************************************/
-        
-        /*************** I2C Accelerometer ***************/
-//        X = 0; Y = 0; Z = 0;
-//
-//        while(I2C_Status != I2C1_MESSAGE_COMPLETE);
-//        I2C1_MasterWrite(ADXL345_DATA_X0, 1, ADXL345_I2C_ADDR, &I2C_Status);
-//        while(I2C_Status != I2C1_MESSAGE_COMPLETE);
-//        I2C1_MasterRead(&accelData, 6, ADXL345_I2C_ADDR, &I2C_Status);
-//        
-//        showBinary(I2C_Status << 1);
-//        
-//        // Receive acceleration measurements as 16 bit integers
-//        X = accelData[0] + (accelData[1] << 8); // (Little Endian form)
-//        Y = accelData[2] + (accelData[3] << 8);
-//        Z = accelData[4] + (accelData[5] << 8);
-//        // Only use the 10 significant bits
-//        X >>= 6; Y >>= 6; Z >>= 6;
-//            
-//        showBinary(Y);
-        
-//        X = readReg(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_X); // Get Accel. X Data
-//        showBinary(I2C_Status << 1);
-        /*************************************************/
-        
-//        showCount();
-        
         //FatFsDemo_Tasks();
     }
     return 0; 
@@ -625,6 +440,58 @@ void showStartup(void) {
     
 }
 
+void showStartupRGB(void) {
+    uint16_t delay = 200;
+    
+    showBinary(LR_RED | LR_ON | MID_RED);
+    msTimerDelay(delay);
+    
+    showBinary(LR_PRP | LR_ON | MID_PRP);
+    msTimerDelay(delay);
+
+    showBinary(LR_BLU | LR_ON | MID_BLU);
+    msTimerDelay(delay);
+    
+    showBinary(LR_BLU | LR_GRN | LR_ON | MID_BLU | MID_GRN);
+    msTimerDelay(delay);
+
+    showBinary(LR_GRN | LR_ON | MID_GRN);
+    msTimerDelay(delay);;
+}
+
+void showDistanceRGB(uint16_t dist, LED_posn LED) {
+    if(1900 < dist) {
+        showBinary(0x00);
+    }
+    else if(LED == LED_C) {
+        if(dist <= 500) {
+            showBinary(MID_RED);
+        } else if(500 < dist && dist <= 1000) {
+            showBinary(MID_GRN);
+        } else if(1000 < dist && dist <= 1500) {
+            showBinary(MID_BLU);
+        }
+    }
+    else if(LED == LED_L) {
+        if(dist <= 500) {
+            showBinary(LR_RED | R_OFF);
+        } else if(500 < dist && dist <= 1000) {
+            showBinary(LR_GRN | R_OFF);
+        } else if(1000 < dist && dist <= 1500) {
+            showBinary(LR_BLU | R_OFF);
+        }
+    }
+    else if(LED == LED_R) {
+        if(dist <= 500) {
+            showBinary(LR_RED | L_OFF);
+        } else if(500 < dist && dist <= 1000) {
+            showBinary(LR_GRN | L_OFF);
+        } else if(1000 < dist && dist <= 1500) {
+            showBinary(LR_BLU | L_OFF);
+        }
+    }
+}
+
 // a visual for errors
 void showError(void) {
     uint16_t delay = 50;
@@ -642,13 +509,27 @@ void showError(void) {
 /* * * * * * * * * * * * I2C Bus Read/Write Functions * * * * * * * * * * * */
 
 void selectPort(muxPort_t sensorPort) {
+    if(sensorPort.mux == 0x00) {
+        writeRegister(MUX_1, 0x00, 0x00); // disable mux 1
+    }
+    else if(sensorPort.mux == 0x01) {
+        writeRegister(MUX_0, 0x00, 0x00); // disable mux 0
+    }
     // base mux address is 0x70
     writeRegister((MUX_0 + sensorPort.mux), 0x00, (0x04 + sensorPort.port));
 }
 
 void selectPort2(uint8_t mux, uint8_t port) {
     // base mux address is 0x70
-    writeRegister((MUX_0 + mux), 0x00, (port));
+    if(mux == 0x00) {
+        writeRegister(MUX_1, 0x00, 0x00);
+        writeRegister(MUX_0, 0x00, (0x04 + port));
+    }
+    else if(mux == 0x01) {
+        writeRegister(MUX_0, 0x00, 0x00);
+        writeRegister(MUX_1, 0x00, (0x04 + port));
+    }
+    
 }
 
 // read the interrupts from mux
@@ -731,54 +612,106 @@ uint8_t readReg(uint8_t dev, uint8_t reg) {
 
 /* * * * * * * * * * * * * * ToF Helper Functions * * * * * * * * * * * * * */
 
+void initSingleToF(int ToF_num, uint16_t *dists) {
+    selectPort(ToF[ToF_num]);
+    msTimerDelay(1);
+    VL53L0X_init();
+    dists[ToF_num] = VL53L0X_readRangeSingleMillimeters();
+}
+
 void initAllToF(uint16_t *dists) {
     int i = 0;
-    for(i = 0; i < 5; i++) {
+    for(i = 0; i < 6; i++) {
         selectPort(ToF[i]);
         msTimerDelay(1);
         VL53L0X_init();
         dists[i] = VL53L0X_readRangeSingleMillimeters();
+        if(!auto_int_clr) {
+            writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
+        }
     }
-    
-//    selectPort(ToF[0]); // Select Multiplexer 0, Port 0
-//    msTimerDelay(5);
-//    dists[0] = VL53L0X_readRangeSingleMillimeters();
-//    VL53L0X_stopContinuous();
-//    msTimerDelay(5);
-//    
-//    selectPort(ToF[1]); // Select Multiplexer 0, Port 1
-//    msTimerDelay(5);
+}
+
+void initAllToF2(uint16_t *dists) {
+    int i = 1;
+//    selectPort(ToF[i]);
+//    msTimerDelay(1);
 //    VL53L0X_init();
-//    dists[1] = VL53L0X_readRangeSingleMillimeters();
-//    VL53L0X_stopContinuous();
-//    msTimerDelay(5);
+//    dists[i] = VL53L0X_readRangeSingleMillimeters();
+//    if(!auto_int_clr) {
+//        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
+//    }
+
+    i = 3;
+    selectPort(ToF[i]);
+    msTimerDelay(1);
+    VL53L0X_init();
+    dists[i] = VL53L0X_readRangeSingleMillimeters();
+    if(!auto_int_clr) {
+        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
+    }
+
+    i = 4;
+    selectPort(ToF[i]);
+    msTimerDelay(1);
+    VL53L0X_init();
+    dists[i] = VL53L0X_readRangeSingleMillimeters();
+    if(!auto_int_clr) {
+        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
+    }
+
+    i = 5;
+    selectPort(ToF[i]);
+    msTimerDelay(1);
+    VL53L0X_init();
+    dists[i] = VL53L0X_readRangeSingleMillimeters();
+    if(!auto_int_clr) {
+        writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
+    }
+}
+
+void getSingleToF(int ToF_num, uint16_t *dists) {
+    selectPort(ToF[ToF_num]); // Select Multiplexer 0, Port 0
+    msTimerDelay(1);
+    dists[ToF_num] = VL53L0X_readRangeSingleMillimeters();
+    msTimerDelay(1);
 }
 
 void getAllToF(uint16_t *dists) {
     int i = 0;
-    for(i = 0; i < 5; i++) {
-        selectPort(ToF[i]); // Select Multiplexer 0, Port 0
+    for(i = 0; i < 6; i++) {
+        selectPort(ToF[i]);
         msTimerDelay(1);
-        VL53L0X_startContinuous(0);
         dists[i] = VL53L0X_readRangeSingleMillimeters();
         msTimerDelay(1);
-        VL53L0X_stopContinuous();
-        
-//        selectPort(ToF[i]);
-//        VL53L0X_init();
     }
+}
+
+void getAllToF2(uint16_t *dists) {
+    int i = 1;
+//    selectPort(ToF[i]); // Select Multiplexer 0, Port 1
+//    msTimerDelay(1);
+//    VL53L0X_startContinuous(0);
+//    dists[i] = VL53L0X_readRangeSingleMillimeters();
+//    msTimerDelay(1);
+        
+    i = 3;
+    selectPort(ToF[i]); // Select Multiplexer 1, Port 0
+    msTimerDelay(1);
+    dists[i] = VL53L0X_readRangeSingleMillimeters();
+    msTimerDelay(1);
     
-//    selectPort(ToF[0]); // Select Multiplexer 0, Port 0
-//    msTimerDelay(5);
-//    dists[0] = VL53L0X_readRangeSingleMillimeters();
-//    VL53L0X_stopContinuous();
-//    msTimerDelay(5);
-//    
-//    selectPort(ToF[1]); // Select Multiplexer 0, Port 1
-//    msTimerDelay(5);
-//    dists[1] = VL53L0X_readRangeSingleMillimeters();
-//    VL53L0X_stopContinuous();
-//    msTimerDelay(5);
+    i = 4;
+    selectPort(ToF[i]); // Select Multiplexer 1, Port 1
+    msTimerDelay(1);
+    dists[i] = VL53L0X_readRangeSingleMillimeters();
+    msTimerDelay(1);
+    
+    i = 5;
+    selectPort(ToF[i]); // Select Multiplexer 1, Port 2
+    msTimerDelay(1);
+    dists[i] = VL53L0X_readRangeSingleMillimeters();
+    msTimerDelay(1);
 }
 
 // given the array of distances, return the index of the closest object
@@ -791,11 +724,40 @@ uint8_t getNearestObstacleIndex(uint16_t *dists) {
         if(dists[i] < min) {    // if this is the minimum value
             min = dists[i];     // min is the minimum value
             index = i;          // update the value of index
-            
-            //*dists[i] = 0xFFFF;  // rewrite max value after interpretation
         }
     }
     
+    return index;               // 255 indicates all sensors returned 65535
+}
+
+uint8_t getNearestObstacleIndex2(uint16_t *dists) {
+    uint8_t index = 0xFF;
+    uint16_t min = 0xFFFF;        // 65535
+    
+    int i = 1;
+    if(dists[i] < min) {    // if this is the minimum value
+        min = dists[i];     // min is the minimum value
+        index = i;          // update the value of index
+    }
+
+    i = 3;
+    if(dists[i] < min) {    // if this is the minimum value
+        min = dists[i];     // min is the minimum value
+        index = i;          // update the value of index
+    }
+
+    i = 4;
+    if(dists[i] < min) {    // if this is the minimum value
+        min = dists[i];     // min is the minimum value
+        index = i;          // update the value of index
+    }
+
+    i = 5;
+    if(dists[i] < min) {    // if this is the minimum value
+        min = dists[i];     // min is the minimum value
+        index = i;          // update the value of index
+    }
+
     return index;               // 255 indicates all sensors returned 65535
 }
 
@@ -809,14 +771,15 @@ uint8_t VL53L0X_init(void) {
         success = 1;
     }
     
-    VL53L0X_setTimeout(500);
+    VL53L0X_setTimeout(200); // was 500
     // Start continuous back-to-back mode (take readings as
     // fast as possible).  To use continuous timed mode
     // instead, provide a desired inter-measurement period in
     // ms (e.g. sensor.startContinuous(100))
     
-    VL53L0X_setMeasurementTimingBudget(200000);
-    VL53L0X_startContinuous(0);
+    VL53L0X_setMeasurementTimingBudget(200000); // was 200000
+    //VL53L0X_startContinuous(0); // was 0
+    VL53L0X_stopContinuous();
     
     return success;
 }
