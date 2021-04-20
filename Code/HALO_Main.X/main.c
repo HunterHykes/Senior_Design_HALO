@@ -47,6 +47,7 @@
 */
 #include <xc.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define FCY 4000000UL // clock frequency
 #include <libpic30.h>
@@ -115,7 +116,7 @@ int LEDs[NUM_TOF] = {
 #define MID_PRP 0xA0
 
 typedef enum { LED_L, LED_C, LED_R } LED_posn;
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 
 /* * * * * * * * * * * ToF Sensor Definitions * * * * * * * * * * */
 # define MAX_DISTANCE 1500 // 1500mm = 1.5m, the maximum range of interest
@@ -245,7 +246,7 @@ bool did_timeout;
 uint16_t timeout_start_ms;
 uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
 uint32_t measurement_timing_budget_us;
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 
 /* * * * * * * * * * * * I2C Bus Read/Write Functions * * * * * * * * * * * */
 I2C1_MESSAGE_STATUS I2C_Status = I2C1_MESSAGE_COMPLETE; // I2C Bus Status
@@ -260,7 +261,7 @@ void writeRegister_32b(uint8_t dev, uint8_t reg, uint32_t data);
 uint8_t readReg(uint8_t dev, uint8_t reg);
 void readRegister(uint8_t dev, uint8_t reg, uint8_t* data);
 uint16_t readRegister_16b(uint8_t dev, uint8_t reg);
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 
 /* * * * * * * * * * * * * * ToF Helper Functions * * * * * * * * * * * * * */
 void initSingleToF(int ToF_num, uint16_t *dists);
@@ -271,7 +272,98 @@ void getAllToF(uint16_t *dists);
 void getAllToF2(uint16_t *dists);
 uint8_t getNearestObstacleIndex(uint16_t *dists);
 uint8_t getNearestObstacleIndex2(uint16_t *dists);
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+/* * * * * * * * * * * Accelerometer Definitions * * * * * * * * * * */
+//<Nick>
+#define H3LIS200DL_I2CADDR 0x19
+#define H3LIS200DL_WHO_AM_I 0x0F
+#define H3LIS200DL_CTRL_REG1 0x20
+#define H3LIS200DL_CTRL_REG2 0x21
+#define H3LIS200DL_CTRL_REG3 0x22
+#define H3LIS200DL_CTRL_REG4 0x23
+#define H3LIS200DL_CTRL_REG5 0x24
+#define H3LIS200DL_HP_FILTER_RESET 0x25
+#define H3LIS200DL_REFERENCE 0x26
+#define H3LIS200DL_STATUS_REG 0x27
+#define H3LIS200DL_OUT_X_H 0x29               // X Data
+#define H3LIS200DL_OUT_X_L 0x28
+#define H3LIS200DL_OUT_Y_H 0x2B               // Y Data
+#define H3LIS200DL_OUT_Y_L 0x2A
+#define H3LIS200DL_OUT_Z_H 0x2D               // Z Data
+#define H3LIS200DL_OUT_Z_L 0x2C
+#define H3LIS200DL_INT1_CFG 0x30            // Interrupt 1 (Pin 11, used)
+#define H3LIS200DL_INT1_SRC 0x31
+#define H3LIS200DL_INT1_THS 0x32
+#define H3LIS200DL_INT1_DURATION 0x33
+#define H3LIS200DL_INT2_CFG 0x34            // Interrupt 2
+#define H3LIS200DL_INT2_SRC 0x35
+#define H3LIS200DL_INT2_THS 0x36
+#define H3LIS200DL_INT2_DURATION 0x37
+                                // POWER MODES
+#define H3LIS200DL_PWR_DWN 0x00     // Power Down Mode
+#define H3LIS200DL_NRML 0x01        // Normal Mode
+#define H3LIS200DL_LP_0_5HZ 0x02    // Low Power 0.5Hz
+#define H3LIS200DL_LP_1HZ 0x03      // Low Power 1.0Hz
+#define H3LIS200DL_LP_2HZ 0x04      // Low Power 2.0Hz
+#define H3LIS200DL_LP_5HZ 0x05      // Low Power 5.0Hz
+#define H3LIS200DL_LP_10HZ 0x06     // Low Power 10.Hz
+                                // OUTPUT DATA RATES
+#define H3LIS200DL_DR_50HZ 0x00     // 50Hz
+#define H3LIS200DL_DR_100HZ 0x01    // 100Hz
+#define H3LIS200DL_DR_400HZ 0x02    // 400Hz
+#define H3LIS200DL_DR_1000HZ 0x03   // 1000Hz
+
+#define H3LIS200DL_EN_X 0x01    // Enable X Data
+#define H3LIS200DL_EN_Y 0x02    // Enable Y Data
+#define H3LIS200DL_EN_Z 0x04    // Enable Z Data
+#define H3LIS200DL_EN_XYZ 0x07  // Enable X, Y, and Z Data
+
+
+/* * * * * * * * * * * Accelerometer Function Definitions * * * * * * * * * * */
+typedef enum {USE_I2C, USE_SPI} comm_mode;
+typedef enum {POWER_DOWN, NORMAL, LOW_POWER_0_5HZ, LOW_POWER_1HZ,
+                LOW_POWER_2HZ, LOW_POWER_5HZ, LOW_POWER_10HZ} power_mode;
+typedef enum {DR_50HZ, DR_100HZ, DR_400HZ, DR_1000HZ} data_rate;
+typedef enum {HPC_8, HPC_16, HPC_32, HPC_64} high_pass_cutoff_freq_cfg;
+typedef enum {PUSH_PULL, OPEN_DRAIN} pp_od;
+typedef enum {INT_SRC, INT1_2_SRC, DRDY, BOOT} int_sig_src;
+typedef enum {LOW_RANGE, MED_RANGE, NO_RANGE, HIGH_RANGE} fs_range;
+typedef enum {X_AXIS, Y_AXIS, Z_AXIS} int_axis;
+typedef enum {TRIG_ON_HIGH, TRIG_ON_LOW} trig_on_level;
+
+void H3LIS200DL_begin();
+void H3LIS200DL_axesEnable(bool enable);
+void H3LIS200DL_setPowerMode(power_mode pmode);
+void H3LIS200DL_setODR(data_rate drate);
+void H3LIS200DL_readAxes(int16_t* x, int16_t* y, int16_t* z);
+uint8_t H3LIS200DL_readReg(uint8_t reg_address);
+int16_t H3LIS200DL_convertToG(int16_t maxScale, int16_t reading);
+void H3LIS200DL_setHighPassCoeff(high_pass_cutoff_freq_cfg hpcoeff);
+void H3LIS200DL_enableHPF(bool enable);
+void H3LIS200DL_HPFOnIntPin(bool enable, uint8_t pin);
+void H3LIS200DL_intActiveHigh(bool enable);
+void H3LIS200DL_intPinMode(pp_od _pinMode);
+void H3LIS200DL_latchInterrupt(bool enable, uint8_t intSource);
+void H3LIS200DL_intSrcConfig(int_sig_src src, uint8_t pin);
+void H3LIS200DL_setFullScale(fs_range range);
+bool H3LIS200DL_newXData();
+bool H3LIS200DL_newYData();
+bool H3LIS200DL_newZData();
+void H3LIS200DL_enableInterrupt(int_axis axis, trig_on_level trigLevel,uint8_t interrupt, bool enable);
+void H3LIS200DL_setIntDuration(uint8_t duration, uint8_t intSource);
+void H3LIS200DL_setIntThreshold(uint8_t threshold, uint8_t intSource);
+int16_t H3LIS200DL_Read_x(int16_t x);
+int16_t H3LIS200DL_Read_y(int16_t y);
+int16_t H3LIS200DL_Read_z(int16_t z);
+//</Nick>
+bool getAccelPoints(void);
+
+
+/* * * * * * * * * * * SD Card Functions * * * * * * * * * * */
+void writeTemplateToSD(void);
+void writeAccelToSD(void);
+
 
 /* * * * * * * * * * * Time-of-Flight Sensor Functions * * * * * * * * * * */
 uint8_t VL53L0X_init(void);
@@ -295,17 +387,41 @@ uint16_t VL53L0X_readRangeSingleMillimeters(void);
 inline void VL53L0X_setTimeout(uint16_t timeout) { io_timeout = timeout; }
 inline uint16_t VL53L0X_getTimeout(void) { return io_timeout; }
 bool VL53L0X_timeoutOccurred(void);
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 
 /* * * * * * * * * * * * * * LED Display Functions * * * * * * * * * * * * * */
 void showBinary(uint8_t n);
 void showStartup(void);
 void showStartupRGB(void);
 void showDistanceRGB(uint16_t dist, LED_posn LED);
+void showInitRGB(int index);
+void showConcussion(void);
 void showCount(void);
 void showError(void);
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+
+/* * * * * * * * * * * * * Accelerometer Variables * * * * * * * * * * * * */
+// <Nick>
+int16_t x_1, y_1, z_1;
+int16_t x_2, y_2, z_2;
+int16_t x_3, y_3, z_3;
+int16_t x_4, y_4, z_4;
+int16_t x_5, y_5, z_5;
+int16_t thresh = 50; // impact threshold (in Gs))
+int16_t max; // current maximum axis reading
+
+// timestamps of readings
+unsigned long timer1, timer2, timer3, timer4, timer5;
+
+// c-strings for writing data to SD card
+char data1[255];
+char data2[255];
+char data3[255];
+char data4[255];
+char data5[255];
+// </Nick>
+
+// set TRUE to automatically clear the interrupt of each ToF sensor upon reading
 bool auto_int_clr = false;
 
 /*
@@ -321,10 +437,7 @@ int main(void) {
     uint8_t dist_8; // 8-bit integer used to display the 8 LSBs of distance
     uint16_t distances[NUM_TOF] = { 0xFFFF, 0xFFFF, 0xFFFF,
                                     0xFFFF, 0xFFFF, 0xFFFF};
-    
-    /* * * * * * * * * * * * * * microSD * * * * * * * * * * * * * */
-    uint8_t SD_status;
-    uint8_t FW_status;
+
     
     /* * * * * * * * * * * * * * * SETUP * * * * * * * * * * * * * * */
     SYSTEM_Initialize();    // MCC: I2C1, TMR1, SPI1 initialization
@@ -334,41 +447,20 @@ int main(void) {
     //showStartup();    // run on-board LED startup pattern
     showStartupRGB();   // run RGB LED startup pattern
     
-    /* * * * * * * * * * * * * * SD Task * * * * * * * * * * * * * */
-//    FATFS drive;        // Work area (filesystem object) for logical drive
-//    FIL file;           // File to write
-//    UINT actualLength;  // Actual length of
-//    char data[] = "Hello, World!\r\n";
-//    char data2[] = "Eat Pant.\r\n";
-//    char filename[] = "PANT.CSV";
-//    char data[] = "1, 2, 3\r\n";
-//    char data2[] = "X, Y, Z\r\n";
-//    char data3[] = "P, A, N, T\r\n";
-//    msTimerDelay(5);
-//    if( SD_SPI_IsMediaPresent() == false) {
-//        return;
-//    }
-//    SD_status = f_mount(&drive,"0:", 1);
-//    if (SD_status == FR_OK) {   //mount
-//        if (f_open(&file, filename, FA_WRITE | FA_CREATE_NEW ) == FR_OK) { //Open or Create TEST.TXT file
-//            FW_status = f_write(&file, data, sizeof(data)-1, &actualLength );    //write the first line
-//            FW_status = f_write(&file, data2, sizeof(data2)-1, &actualLength );  //write the second line
-//            FW_status = f_write(&file, data3, sizeof(data3)-1, &actualLength );  //write the third line
-//            f_close(&file);
-//        }
-//        f_mount(0,"0:",0);  //unmount disk
-//        msTimerDelay(5);
-//    }
-//    showBinary(SD_status);
-//    msTimerDelay(2000);
+    //writeTemplateToSD();
     
     /* * * * * * * * * * * * * * ToF Setup * * * * * * * * * * * * * */
-//    initSingleToF(ToF_to_test, distances);
-    initAllToF(distances);
-    
-    uint8_t index; // to hold index of the nearest object
-    
+//    initSingleToF(ToF_to_test, distances); // initialize a single ToF sensor
+    initAllToF(distances); // initialize all ToF sensors
+    uint8_t index; // hold the index of the sensor detecting the nearest object
+
     while (1) {
+        
+        /* * * * * * * * * * * * * * Accelerometer * * * * * * * * * * * * * */
+        if(getAccelPoints()) { // get accel data, returns true if max >= thresh
+            writeAccelToSD();
+        }
+        
         /*************** I2C Time-of-Flight **************/
         getAllToF(distances);      // get the distances from all ToF sensors
         
@@ -381,7 +473,7 @@ int main(void) {
 //        showBinary(dist_8); 
 //        msTimerDelay(10);
         // show RGB corresponding to reading of ToF_to_test
-//        showDistanceRGB(distances[ToF_to_test], ToF_to_test/2);
+//        showDistanceRGB(distances[ToF_to_test], LEDs[ToF_to_test]);
         
         // find the sensor detecting the closest obstacle
         index = getNearestObstacleIndex(distances);
@@ -393,7 +485,6 @@ int main(void) {
             showDistanceRGB(distances[index], LEDs[index]);
         }
 
-        //FatFsDemo_Tasks();
     }
     return 0; 
 }
@@ -456,7 +547,7 @@ void showStartupRGB(void) {
     msTimerDelay(delay);
 
     showBinary(LR_GRN | LR_ON | MID_GRN);
-    msTimerDelay(delay);;
+    msTimerDelay(delay);
 }
 
 void showDistanceRGB(uint16_t dist, LED_posn LED) {
@@ -490,6 +581,56 @@ void showDistanceRGB(uint16_t dist, LED_posn LED) {
             showBinary(LR_BLU | L_OFF);
         }
     }
+}
+
+void showInitRGB(int index) {
+    int clr = index % 3; // determines what color to turn the LED
+        // 0 -> RED
+        // 1 -> YELLOW
+        // 2 -> WHITE
+    
+    if(index < (NUM_TOF/2)) { // left side sensors
+        if(clr == 0) {
+            showBinary(LR_RED | R_OFF); // red
+        } else if(clr == 1) {
+            showBinary(LR_RED | LR_GRN | R_OFF); // yellow
+        } else if(clr == 2) {
+            showBinary(LR_RED | LR_GRN | LR_BLU | R_OFF); // white
+        }
+    }
+    else if(( (NUM_TOF/2) < index ) && ( index < NUM_TOF )) { // right side sensors
+        if(clr == 0) {
+            showBinary(LR_RED | L_OFF); // red
+        } else if(clr == 1) {
+            showBinary(LR_RED | LR_GRN | L_OFF); // yellow
+        } else if(clr == 2) {
+            showBinary(LR_RED | LR_GRN | LR_BLU | L_OFF); // white
+        }
+    }
+}
+
+void showConcussion(void) {
+    uint16_t delay = 1000;
+    
+    // show all red
+    showBinary(LR_RED | LR_ON | MID_RED);
+    msTimerDelay(delay);
+    
+    // show all purple
+    showBinary(LR_PRP | LR_ON | MID_PRP);
+    msTimerDelay(delay);
+    
+    // show all red
+    showBinary(LR_RED | LR_ON | MID_RED);
+    msTimerDelay(delay);
+    
+    // show all purple
+    showBinary(LR_PRP | LR_ON | MID_PRP);
+    msTimerDelay(delay);
+    
+    // show all red
+    showBinary(LR_RED | LR_ON | MID_RED);
+    msTimerDelay(delay);
 }
 
 // a visual for errors
@@ -629,7 +770,12 @@ void initAllToF(uint16_t *dists) {
         if(!auto_int_clr) {
             writeRegister(VL53L0X_I2CADDR, SYSTEM_INTERRUPT_CLEAR, 0x01); // clear interrupt
         }
+        showInitRGB(i); // show RGB LED change on each side as sensors init
     }
+    
+    // turn all on white for 1 second to show initialization is done
+    showBinary(LR_RED | LR_GRN | LR_BLU | LR_ON | MID_RED | MID_GRN | MID_BLU);
+    msTimerDelay(1000);
 }
 
 void initAllToF2(uint16_t *dists) {
@@ -1414,6 +1560,527 @@ bool VL53L0X_timeoutOccurred() {
   return tmp;
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * Accelerometer Functions * * * * * * * * * * * * */
+//<Nick>
+void H3LIS200DL_begin()
+{
+    H3LIS200DL_setPowerMode(NORMAL);
+    H3LIS200DL_axesEnable(true);
+
+    uint8_t data = 0;
+//    showBinary(I2C_Status<<1);
+//    msTimerDelay(1000);
+//    showBinary(0xff);
+//    msTimerDelay(1000);
+    
+    uint8_t i = 0x21;
+    for (i = 0x21; i < 0x25; i++) {
+        writeRegister(H3LIS200DL_I2CADDR, i, data);
+    }
+//    showBinary(I2C_Status<<1);
+//    msTimerDelay(1000);
+//    showBinary(0xff);
+//    msTimerDelay(1000);
+    uint8_t j = 0x30;
+    for (j = 0x30; j < 0x37; j++) {
+      writeRegister(H3LIS200DL_I2CADDR, j, data);    
+    }
+//    showBinary(I2C_Status<<1);
+//    msTimerDelay(1000);
+//    showBinary(0xff);
+//    msTimerDelay(1000);
+}
+
+void H3LIS200DL_axesEnable(bool enable)
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1, &data);
+  if (enable)
+  {
+    data |= 0x07;
+  }
+  else
+  {
+    data &= ~0x07;
+  }
+  writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1, data);
+}
+
+void H3LIS200DL_setPowerMode(power_mode pmode)
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1, &data);
+  
+  // The power mode is the high three bits of CTRL_REG1. The mode 
+  //  constants are the appropriate bit values left shifted by five, so we 
+  //  need to right shift them to make them work. We also want to mask off the
+  //  top three bits to zero, and leave the others untouched, so we *only*
+  //  affect the power mode bits.
+  data &= ~0xe0;    // Clear the top three bits
+  data |= pmode<<5; // set the top three bits to our pmode value
+  writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1, data); // write the new value to CTRL_REG1
+}
+
+void H3LIS200DL_setODR(data_rate drate)
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1,  &data);
+
+  // The data rate is bits 4:3 of CTRL_REG1. The data rate constants are the
+  //  appropriate bit values; we need to right shift them by 3 to align them
+  //  with the appropriate bits in the register. We also want to mask off the
+  //  top three and bottom three bits, as those are unrelated to data rate and
+  //  we want to only change the data rate.
+  data &=~0x18;     // Clear the two data rate bits
+  data |= drate<<3; // Set the two data rate bits appropriately.
+  writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG1, data); // write the new value to CTRL_REG1
+}
+
+void H3LIS200DL_readAxes(int16_t* x, int16_t* y, int16_t* z)
+{
+  uint8_t data[6]; // create a buffer for our incoming data
+  
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_X_L, &data[0]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_X_H, &data[1]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Y_L, &data[2]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Y_H, &data[3]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Z_L, &data[4]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Z_H, &data[5]);
+  // The data that comes out is 12-bit data, left justified, so the lower
+  //  four bits of the data are always zero. We need to right shift by four,
+  //  then typecase the upper data to an integer type so it does a signed
+  //  right shift.
+  *x = data[0] | data[1] << 8;
+  *y = data[2] | data[3] << 8;
+  *z = data[4] | data[5] << 8;
+  *x = (*x>>4) ;
+  *y = (*y>>4) ;
+  *z = (*z>>4) ;
+}
+
+int16_t H3LIS200DL_Read_x(int16_t x)
+{
+  uint8_t data[6];
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_X_L, &data[0]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_X_H, &data[1]);
+  x = data[0] | data[1] << 8;
+  x = x >> 4;
+  return(x);
+}
+
+int16_t H3LIS200DL_Read_y(int16_t y)
+{
+  uint8_t data[6];
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Y_L, &data[2]);
+  //I2C1_MasterRead(&data[2], 2, H3LIS200DL_I2CADDR, &I2C_Status);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Y_H, &data[3]);
+  //I2C1_MasterRead(&data[3], 2, H3LIS200DL_I2CADDR, &I2C_Status);
+  y = data[2] | data[3] << 8;
+  y = y >> 4;
+  return(y);
+}
+
+int16_t H3LIS200DL_Read_z(int16_t z)
+{
+  uint8_t data[6];
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Z_L, &data[4]);
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_OUT_Z_H, &data[5]);
+  z = data[4] | data[5] << 8;
+  z = z >> 4;
+  return(z);
+}
+
+int16_t H3LIS200DL_convertToG(int16_t maxScale, int16_t reading)
+{
+    maxScale = (float)maxScale;
+    reading = (float)reading;
+  float result = ((maxScale * reading)/2047);
+  return ((int16_t)result);
+}
+
+void H3LIS200DL_setHighPassCoeff(high_pass_cutoff_freq_cfg hpcoeff)
+{
+  // The HPF coeff depends on the output data rate. The cutoff frequency is
+  //  is approximately fs/(6*HPc) where HPc is 8, 16, 32 or 64, corresponding
+  //  to the various constants available for this parameter.
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG2,  &data);
+  data &= ~0xfc;  // Clear the two low bits of the CTRL_REG2
+  data |= hpcoeff;
+  writeRegister(H3LIS200DL_CTRL_REG2, data, 1);
+}
+
+void H3LIS200DL_enableHPF(bool enable)
+{
+  // Enable the high pass filter
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG2,  &data);
+  if (enable)
+  {
+    data |= 1<<5;
+  }
+  else
+  {
+    data &= ~(1<<5);
+  }
+  writeRegister(H3LIS200DL_CTRL_REG2, data, 1);
+}
+
+void H3LIS200DL_HPFOnIntPin(bool enable, uint8_t pin)
+{
+  // Enable the hpf on signal to int pins 
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG2,  &data);
+  if (enable)
+  {
+    if (pin == 1)
+    {
+      data |= 1<<3;
+    }
+    if (pin == 2)
+    {
+      data |= 1<<4;
+    }
+  }
+  else
+  {
+    if (pin == 1)
+    {
+      data &= ~1<<3;
+    }
+    if (pin == 2)
+    {
+      data &= ~1<<4;
+    }
+  }
+  writeRegister(H3LIS200DL_CTRL_REG2, data, 1);
+}
+
+void H3LIS200DL_intActiveHigh(bool enable)
+{
+  // Are the int pins active high or active low?
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG3,  &data);
+  // Setting bit 7 makes int pins active low
+  if (!enable)
+  {
+    data |= 1<<7;
+  }
+  else
+  {
+    data &= ~(1<<7);
+  }
+  writeRegister(H3LIS200DL_CTRL_REG3, data, 1);
+}
+
+void H3LIS200DL_intPinMode(pp_od _pinMode)
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG3,  &data);
+  // Setting bit 6 makes int pins open drain.
+  if (_pinMode == OPEN_DRAIN)
+  {
+    data |= 1<<6;
+  }
+  else
+  {
+    data &= ~(1<<6);
+  }
+  writeRegister(H3LIS200DL_CTRL_REG3, data, 1);
+}
+
+void H3LIS200DL_latchInterrupt(bool enable, uint8_t intSource)
+{
+  // Latch mode for interrupt. When enabled, you must read the INTx_SRC reg
+  //  to clear the interrupt and make way for another.
+  uint8_t data; 
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG3,  &data);
+  // Enable latching by setting the appropriate bit.
+  if (enable)
+  {
+    if (intSource == 1)
+    {
+      data |= 1<<2;
+    }
+    if (intSource == 2)
+    {
+      data |= 1<<5;
+    }
+  }
+  else
+  {
+    if (intSource == 1)
+    {
+      data &= ~1<<2;
+    }
+    if (intSource == 2)
+    {
+      data &= ~1<<5;
+    }
+  }
+  writeRegister(H3LIS200DL_CTRL_REG3, data, 1);
+}
+
+void H3LIS200DL_intSrcConfig(int_sig_src src, uint8_t pin)
+{
+
+  uint8_t data; 
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG3,  &data);
+  // Enable latching by setting the appropriate bit.
+  if (pin == 1)
+  {
+    data &= ~0xfc; // clear the low two bits of the register
+    data |= src;
+  }
+  if (pin == 2)
+  {
+    data &= ~0xe7; // clear bits 4:3 of the register
+    data |= src<<4;
+  }
+  writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG3, data);
+}
+
+void H3LIS200DL_setFullScale(fs_range range)
+{
+  uint8_t data; 
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_CTRL_REG4,  &data);
+  data &= ~0xcf;
+  data |= range<<4;
+  writeRegister(H3LIS200DL_CTRL_REG4, data, 1);
+}
+
+bool H3LIS200DL_newXData()
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_STATUS_REG,  &data);
+  if (data & 1<<0)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool H3LIS200DL_newYData()
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_STATUS_REG,  &data);
+  if (data & 1<<1)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool H3LIS200DL_newZData()
+{
+  uint8_t data;
+  readRegister(H3LIS200DL_I2CADDR, H3LIS200DL_STATUS_REG,  &data);
+  if (data & 1<<2)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void H3LIS200DL_enableInterrupt(int_axis axis, trig_on_level trigLevel,
+                     uint8_t interrupt, bool enable)
+{
+  uint8_t data, reg, mask; 
+  mask = 0;
+  if (interrupt == 1)
+  {
+    reg = H3LIS200DL_INT1_CFG;
+  }
+  else
+  {
+    reg = H3LIS200DL_INT2_CFG;
+  }
+  readRegister(H3LIS200DL_I2CADDR, reg,  &data);
+  if (trigLevel == TRIG_ON_HIGH)
+  {
+    mask = 1<<1;
+  }
+  else
+  {
+    mask = 1;
+  }
+  if (axis == Z_AXIS) mask = mask<<4;
+  if (axis == Y_AXIS) mask = mask<<2;
+  if (enable)
+  {
+    data |= mask;
+  }
+  else
+  {
+    data &= ~mask;
+  }
+  writeRegister(H3LIS200DL_I2CADDR, reg, data);
+}
+
+void H3LIS200DL_setIntDuration(uint8_t duration, uint8_t intSource)
+{
+  if (intSource == 1)
+  {
+    writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_INT1_DURATION, duration);
+  }
+  else
+  {
+    writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_INT2_DURATION, duration);
+  }
+}
+
+void H3LIS200DL_setIntThreshold(uint8_t threshold, uint8_t intSource)
+{
+  if (intSource == 1)
+  {
+    writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_INT1_THS, threshold);
+  }
+  else
+  {
+    writeRegister(H3LIS200DL_I2CADDR, H3LIS200DL_INT2_THS, threshold);
+  }
+}
+//</Nick>
+
+// returns true if one of the axes exceeds the set threshold
+bool getAccelPoints(void) {
+    uint8_t delay = 5;
+    selectPort2(0x01, 0x03); // select Accelerometer port (Mux 1, Port 3)
+    
+    // <Nick>
+    H3LIS200DL_begin();
+    
+    H3LIS200DL_readAxes(&x_1, &y_1, &z_1);
+    timer1 = millis();
+    msTimerDelay(delay);
+    
+    H3LIS200DL_readAxes(&x_2, &y_2, &z_2);
+    timer2 = millis();
+    msTimerDelay(delay);
+    
+    H3LIS200DL_readAxes(&x_3, &y_3, &z_3);
+    timer3 = millis();
+    msTimerDelay(delay);
+    
+    H3LIS200DL_readAxes(&x_4, &y_4, &z_4);
+    timer4 = millis();
+    msTimerDelay(delay);
+    
+    H3LIS200DL_readAxes(&x_5, &y_5, &z_5);
+    timer5 = millis();
+    msTimerDelay(delay);
+
+    // find the maximum value of the 3 axes
+    if(x_3 > y_3) {
+        if(x_3 > z_3) {
+            max = x_3;
+        }
+        else {
+            max = z_3;
+        }
+    }
+    else {
+        if(y_3 > z_3) {
+            max = y_3;
+        }
+        else {
+            max = z_3;
+        }
+    }
+    // </Nick>
+    
+    // if the maximum value is at or above the preset threshold, return true
+    return (max >= thresh);
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+// write a .CSV template to the SD card
+// pass SD status and File Write status variables for debugging purposes
+void writeTemplateToSD(void) {
+    uint8_t SD_status;
+    uint8_t FW_status;
+    FATFS drive;        // Work area (filesystem object) for logical drive
+    FIL file;           // File to write
+    UINT actualLength;  // Actual length of
+    char data0[] = "X, Y, Z, T\r\n";
+    char data1[] = "x1, y1, z1, t1\r\n";
+    char data2[] = "x2, y2, z2, t2\r\n";
+    char filename[] = "DUMMY.CSV";
+
+    msTimerDelay(5);
+    if( SD_SPI_IsMediaPresent() == false) {
+        return;
+    }
+    SD_status = f_mount(&drive,"0:", 1);
+    if (SD_status == FR_OK) {   //mount
+        if (f_open(&file, filename, FA_WRITE | FA_CREATE_NEW ) == FR_OK) { //Open or Create TEST.TXT file
+            FW_status = f_write(&file, data0, sizeof(data0)-1, &actualLength );    //write the first line
+            FW_status = f_write(&file, data1, sizeof(data1)-1, &actualLength );
+            FW_status = f_write(&file, data2, sizeof(data2)-1, &actualLength );
+            f_close(&file);
+        }
+        f_mount(0,"0:",0);  //unmount disk
+        msTimerDelay(5);
+    }
+}
+
+// write a .CSV containing accelerometer data to the SD card
+// pass SD status and File Write status variables for debugging purposes
+void writeAccelToSD(void) {
+    // <Nick>
+    uint8_t SD_status;
+    uint8_t FW_status;
+    FATFS drive;        // Work area (filesystem object) for logical drive
+    FIL file;           // File to write
+    UINT actualLength;  // Actual length of
+    char data0[] = "X, Y, Z, t\r\n";
+    char filename[] = "ACCEL.CSV";
+
+    // write 5 data strings in .CSV format for X, Y, and Z axes
+    // with millis() timestamps to plot
+    sprintf(data1, "%f, %f, %f, %f \r\n", (double)x_1, (double)y_1, (double)z_1, (double)timer1);
+    sprintf(data2, "%f, %f, %f, %f \r\n", (double)x_2, (double)y_2, (double)z_2, (double)timer2);
+    sprintf(data3, "%f, %f, %f, %f \r\n", (double)x_3, (double)y_3, (double)z_3, (double)timer3);
+    sprintf(data4, "%f, %f, %f, %f \r\n", (double)x_4, (double)y_4, (double)z_4, (double)timer4);
+    sprintf(data5, "%f, %f, %f, %f \r\n", (double)x_5, (double)y_5, (double)z_5, (double)timer5);
+            
+    // write the data strings to a file
+    if( SD_SPI_IsMediaPresent() == false) {
+        return;
+    }
+    SD_status = f_mount(&drive,"0:", 1);
+    if (SD_status == FR_OK) {   // mount disk
+        //Open or Create <filename> file
+        if (f_open(&file, filename, FA_WRITE | FA_CREATE_NEW ) == FR_OK) {
+            // write column headers
+            FW_status = f_write(&file, data0, sizeof(data0)-1, &actualLength );
+            
+            // write each line of data
+            FW_status = f_write(&file, data1, sizeof(data1)-1, &actualLength );
+            FW_status = f_write(&file, data2, sizeof(data2)-1, &actualLength );
+            FW_status = f_write(&file, data3, sizeof(data3)-1, &actualLength );
+            FW_status = f_write(&file, data4, sizeof(data4)-1, &actualLength );
+            FW_status = f_write(&file, data5, sizeof(data5)-1, &actualLength );
+                    
+            f_close(&file); // close the file
+        }
+        f_mount(0,"0:",0);  // unmount disk
+        msTimerDelay(5);
+    }
+    // </Nick>
+    
+    showConcussion(); // 5 second LED display: RED/PURPLE/RED/PURPLE/RED
+}
 
 /**
  End of File
