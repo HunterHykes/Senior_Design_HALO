@@ -358,6 +358,7 @@ int16_t H3LIS200DL_Read_y(int16_t y);
 int16_t H3LIS200DL_Read_z(int16_t z);
 //</Nick>
 bool getAccelPoints(void);
+bool getAccelPoints2(void);
 
 
 /* * * * * * * * * * * SD Card Functions * * * * * * * * * * */
@@ -407,8 +408,8 @@ int16_t x_2, y_2, z_2;
 int16_t x_3, y_3, z_3;
 int16_t x_4, y_4, z_4;
 int16_t x_5, y_5, z_5;
-int16_t thresh = 50; // impact threshold (in Gs))
-int16_t max; // current maximum axis reading
+int16_t thresh = 50; // impact threshold (in Gs)) // set to 50 for actual use
+int16_t max = 0x0000; // current maximum axis reading
 
 // timestamps of readings
 unsigned long timer1, timer2, timer3, timer4, timer5;
@@ -454,10 +455,16 @@ int main(void) {
     initAllToF(distances); // initialize all ToF sensors
     uint8_t index; // hold the index of the sensor detecting the nearest object
 
+    
+    /* * * * * * * * * * * Accelerometer Setup * * * * * * * * * * */
+    selectPort2(0x00, 0x03); // select Accelerometer port (Mux 0, Port 3)
+    H3LIS200DL_begin();
+    msTimerDelay(5);
+    
     while (1) {
         
         /* * * * * * * * * * * * * * Accelerometer * * * * * * * * * * * * * */
-        if(getAccelPoints()) { // get accel data, returns true if max >= thresh
+        if(getAccelPoints2()) { // get accel data, returns true if max >= thresh
             writeAccelToSD();
         }
         
@@ -598,7 +605,7 @@ void showInitRGB(int index) {
             showBinary(LR_RED | LR_GRN | LR_BLU | R_OFF); // white
         }
     }
-    else if(( (NUM_TOF/2) < index ) && ( index < NUM_TOF )) { // right side sensors
+    else if(( (NUM_TOF/2) <= index ) && ( index < NUM_TOF )) { // right side sensors
         if(clr == 0) {
             showBinary(LR_RED | L_OFF); // red
         } else if(clr == 1) {
@@ -1569,27 +1576,17 @@ void H3LIS200DL_begin()
     H3LIS200DL_axesEnable(true);
 
     uint8_t data = 0;
-//    showBinary(I2C_Status<<1);
-//    msTimerDelay(1000);
-//    showBinary(0xff);
-//    msTimerDelay(1000);
+
     
     uint8_t i = 0x21;
     for (i = 0x21; i < 0x25; i++) {
         writeRegister(H3LIS200DL_I2CADDR, i, data);
     }
-//    showBinary(I2C_Status<<1);
-//    msTimerDelay(1000);
-//    showBinary(0xff);
-//    msTimerDelay(1000);
+
     uint8_t j = 0x30;
     for (j = 0x30; j < 0x37; j++) {
       writeRegister(H3LIS200DL_I2CADDR, j, data);    
     }
-//    showBinary(I2C_Status<<1);
-//    msTimerDelay(1000);
-//    showBinary(0xff);
-//    msTimerDelay(1000);
 }
 
 void H3LIS200DL_axesEnable(bool enable)
@@ -1955,11 +1952,9 @@ void H3LIS200DL_setIntThreshold(uint8_t threshold, uint8_t intSource)
 // returns true if one of the axes exceeds the set threshold
 bool getAccelPoints(void) {
     uint8_t delay = 5;
-    selectPort2(0x01, 0x03); // select Accelerometer port (Mux 1, Port 3)
+    selectPort2(0x00, 0x03); // select Accelerometer port (Mux 0, Port 3)
     
     // <Nick>
-    H3LIS200DL_begin();
-    
     H3LIS200DL_readAxes(&x_1, &y_1, &z_1);
     timer1 = millis();
     msTimerDelay(delay);
@@ -2001,6 +1996,212 @@ bool getAccelPoints(void) {
     
     // if the maximum value is at or above the preset threshold, return true
     return (max >= thresh);
+}
+
+bool getAccelPoints2(void) {
+    uint8_t delay = 1;
+    selectPort2(0x00, 0x03); // select Accelerometer port (Mux 0, Port 3)
+    
+    // <Nick>
+    int16_t max1 = 0x0000;
+    int16_t max2 = 0x0000;
+    int16_t max3 = 0x0000;
+    int16_t max4 = 0x0000;
+    int16_t max5 = 0x0000;
+    int16_t truemax = 0x0000;
+    
+    H3LIS200DL_readAxes(&x_1, &y_1, &z_1);
+        timer1 = millis();
+        if(x_1 > y_1) {
+            if(x_1 > z_1) {
+                max1 = x_1;
+            }
+            else {
+                max1 = z_1;
+            }
+        }
+        else {
+            if(y_1 > z_1) {
+                max1 = y_1;
+            }
+            else {
+                max1 = z_1;
+            }
+        }
+        msTimerDelay(delay);
+        
+        H3LIS200DL_readAxes(&x_2, &y_2, &z_2);
+        timer2 = millis();
+        if(x_2 > y_2) {
+            if(x_2 > z_2) {
+                max2 = x_2;
+            }
+            else {
+                max2 = z_2;
+            }
+        }
+        else {
+            if(y_2 > z_2) {
+                max2 = y_2;
+            }
+            else {
+                max2 = z_2;
+            }
+        }
+        msTimerDelay(delay);
+        
+        H3LIS200DL_readAxes(&x_3, &y_3, &z_3);
+        timer3 = millis();
+        if(x_3 > y_3) {
+            if(x_3 > z_3) {
+                max3 = x_3;
+            }
+            else {
+                max3 = z_3;
+            }
+        }
+        else {
+            if(y_3 > z_3) {
+                max3 = y_3;
+            }
+            else {
+                max3 = z_3;
+            }
+        }
+        msTimerDelay(delay);
+        
+        H3LIS200DL_readAxes(&x_4, &y_4, &z_4);
+        timer4 = millis();
+        if(x_4 > y_4) {
+            if(x_4 > z_4) {
+                max4 = x_4;
+            }
+            else {
+                max4 = z_4;
+            }
+        }
+        else {
+            if(y_4 > z_4) {
+                max4 = y_4;
+            }
+            else {
+                max4 = z_4;
+            }
+        }
+        msTimerDelay(delay);
+        
+        H3LIS200DL_readAxes(&x_5, &y_5, &z_5);
+        timer5 = millis();
+        if(x_5 > y_5) {
+            if(x_5 > z_5) {
+                max5 = x_5;
+            }
+            else {
+                max5 = z_5;
+            }
+        }
+        else {
+            if(y_5 > z_5) {
+                max5 = y_5;
+            }
+            else {
+                max5 = z_5;
+            }
+        }
+        msTimerDelay(delay);
+        //showBinary(y << 1);
+        if(max1 > max2)
+        {
+            if(max1 > max3)
+            {
+                if(max1 > max4)
+                {
+                    if(max1 > max5)
+                    {
+                        truemax = max1;
+                    }
+                    else
+                    {
+                        truemax = max5;
+                    }
+                }
+                else if(max4 > max5)
+                {
+                    truemax = max4;
+                }
+                else
+                {
+                    truemax = max5;
+                }
+            }
+            else if(max3 > max4)
+            {
+                if(max3 > max5)
+                {
+                    truemax = max3;
+                }
+                else
+                {
+                    truemax = max5;
+                }
+            }
+            else
+            {
+                if(max4 > max5)
+                {
+                    truemax = max4;
+                }
+                else
+                {
+                    truemax = max5;
+                }
+            }
+        }
+        else if(max2 > max3)
+        {
+            if(max2 > max4)
+            {
+                if(max2 > max5)
+                {
+                    truemax = max5;
+                }
+                else
+                {
+                    truemax = max5;
+                }
+            }
+            else if(max4 > max5)
+            {
+                truemax = max4;
+            }
+            else
+            {
+                truemax = max5;
+            }
+        }
+        else if(max3 > max4)
+        {
+            if(max3 > max5)
+            {
+                truemax = max3;
+            }
+            else
+            {
+                truemax = max5;
+            }
+        }
+        else if(max4 > max5)
+        {
+            truemax = max4;
+        }
+        else
+        {
+            truemax = max5;
+        }
+    // </Nick>
+    
+    // if the maximum value is at or above the preset threshold, return true
+    return (truemax >= thresh);
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
