@@ -11,6 +11,7 @@ In the event that the user hits their head either from a collision from walking 
   <img width="460" height="300" src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HardHat.png">
 </p>
 [comment]: <>![H.A.L.O. attached to a hard hat.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HardHat.png)
+
 ![H.A.L.O. detached from a hard hat.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_detached.png)
 ![H.A.L.O. being worn by myself.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO.JPG)
 ![H.A.L.O. Main Board (top).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_top.png)
