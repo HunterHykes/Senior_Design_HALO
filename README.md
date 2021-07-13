@@ -5,7 +5,7 @@ This is the repository for the Hard Hat Ambient Liability Observer (H.A.L.O.) I 
 <p align="center">
   <img width="50%" height="50%" src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HardHat.png">
   
-  H.A.L.O. attached to a hard hat.
+<p align="center">H.A.L.O. attached to a hard hat.</p>
 </p>
 
 
