@@ -3,9 +3,9 @@
 This is the repository for the Hard Hat Ambient Liability Observer (H.A.L.O.) I assisted in developing for my senior design project at the University of Akron from Spring 2020 - Spring 2021.
 
   <p align="center">
-    <img width="460" height="300" src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HardHat.png">
+    <img width="50%" height="50%" src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HardHat.png">
   
-    <caption>H.A.L.O. attached to a hard hat.</caption>
+    H.A.L.O. attached to a hard hat.
   </p>
 
 
