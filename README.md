@@ -22,12 +22,10 @@ This product is a hard hat attachment which utilizes six time-of-flight (ToF) se
 
 <div width="100%">
   <p align="center">
-    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png" width="98" />
-    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png" width="100" /> 
+    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png" width="198" />
+    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png" width="200" /> 
   </p>
 </div>
-
-![H.A.L.O. Time-of-Flight Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png)  ![H.A.L.O. RGB LED Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png)
 
 
 In the event that the user hits their head either from a collision from walking or perhaps from slipping and falling, an on-board accelerometer will detect the impact severity. If this impact is determined to pose a concussion threat to the user, the accelerometer data is logged to a .csv file on a micro-SD card, which can then be used to assess health-related concerns.
