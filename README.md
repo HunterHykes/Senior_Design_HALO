@@ -22,8 +22,8 @@ This product is a hard hat attachment which utilizes six time-of-flight (ToF) se
 
 <div width="100%">
   <p align="center">
-    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png" width="98%" height="98%" />
-    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png" width="100%" height="100%" /> 
+    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png" width="98" />
+    <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png" width="100" /> 
   </p>
 </div>
 
