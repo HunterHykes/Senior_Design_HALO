@@ -41,10 +41,15 @@ If this impact is determined to pose a concussion threat to the user, the accele
 
 ## Images
 
+
+<p align="center">
+  <img width="50%" src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO.JPG">
+  
+<p align="center">H.A.L.O. being worn by myself.</p>
+</p>
+
 <!--- ![H.A.L.O. attached to a hard hat.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HardHat.png) --->
 <!--- ![H.A.L.O. detached from a hard hat.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_detached.png) --->
-![H.A.L.O. being worn by myself.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO.JPG)
-![H.A.L.O. Main Board (top).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_top.png)
-![H.A.L.O. Main Board (bottom).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_bottom.png)
+<!--- ![H.A.L.O. being worn by myself.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO.JPG) --->
 <!--- ![H.A.L.O. Time-of-Flight Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png) --->
 <!--- ![H.A.L.O. RGB LED Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png) --->
