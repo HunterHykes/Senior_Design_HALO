@@ -32,7 +32,12 @@ Dependent on the distance between the user and the hazard, some RGB LEDs placed 
 <p align="center">H.A.L.O. RGB LED Board.</p>
 </p>
 
-In the event that the user hits their head either from a collision from walking or perhaps from slipping and falling, an on-board accelerometer will detect the impact severity. If this impact is determined to pose a concussion threat to the user, the accelerometer data is logged to a .csv file on a micro-SD card, which can then be used to assess health-related concerns.
+In the event that the user hits their head either from a collision from walking or perhaps from slipping and falling, an on-board accelerometer will detect the impact severity.
+
+![H.A.L.O. Main Board (top).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_top.png)
+![H.A.L.O. Main Board (bottom).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_bottom.png)
+
+If this impact is determined to pose a concussion threat to the user, the accelerometer data is logged to a .csv file on a micro-SD card, which can then be used to assess health-related concerns.
 
 ## Images
 
@@ -41,5 +46,5 @@ In the event that the user hits their head either from a collision from walking 
 ![H.A.L.O. being worn by myself.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO.JPG)
 ![H.A.L.O. Main Board (top).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_top.png)
 ![H.A.L.O. Main Board (bottom).](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_Main_bottom.png)
-![H.A.L.O. Time-of-Flight Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png)
-![H.A.L.O. RGB LED Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png)
+<!--- ![H.A.L.O. Time-of-Flight Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png) --->
+<!--- ![H.A.L.O. RGB LED Board.](https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png) --->
