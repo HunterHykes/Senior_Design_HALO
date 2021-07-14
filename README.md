@@ -21,10 +21,10 @@ This is the repository for the Hard Hat Ambient Liability Observer (H.A.L.O.) I 
 This product is a hard hat attachment which utilizes six time-of-flight (ToF) sensors to detect hazards within a 1.5m radius from the wearer's head with a 150° field of view. Dependent on the distance between the user and the hazard, some RGB LEDs placed near the brim of the hard hat will turn on and change hue from yellow to red as objects approach. This enhances the awareness of the user of potential hazards.
 
 <p align="center">
-<p float="left">
+
   <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png" width="100" />
   <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png" width="100" /> 
-</p>
+
 </p>
 
 
