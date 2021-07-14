@@ -23,14 +23,10 @@ This product is a hard hat attachment which utilizes six time-of-flight (ToF) se
 <div width="100%">
   <p align="center">
     <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_ToF.png" width="148" />
-    <p>H.A.L.O. Time-of-Flight Board.</p>
     <img src="https://github.com/HunterHykes/Senior_Design_HALO/raw/main/Images/HALO_RGB.png" width="152" />
-    <p>H.A.L.O. RGB LED Board.</p>
   </p>
-  <p align="center">
-    <p>H.A.L.O. Time-of-Flight Board.</p>
-    <p>H.A.L.O. RGB LED Board.</p>
-  </p>
+    <div width="50%"><p>H.A.L.O. Time-of-Flight Board.</p></div>
+    <div width="50%"><p>H.A.L.O. RGB LED Board.</p></div>
 </div>
 
 
